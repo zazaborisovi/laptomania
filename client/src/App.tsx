@@ -1,11 +1,11 @@
 import { Route, Routes } from 'react-router';
-import Nav from './components/UI/Nav';
-import Register from './pages/Signup';
-import Login from './pages/Login';
-import Panel from './pages/Panel';
-import Protect from './components/utils/Protect';
-import Catalog from './pages/Catalog';
-import Home from './pages/Home';
+import Nav from './components/UI/Nav.tsx';
+import Register from './pages/Signup.tsx';
+import Login from './pages/Login.tsx';
+import Panel from './pages/Panel.tsx';
+import Protect from './components/utils/Protect.tsx';
+import Catalog from './pages/Catalog.tsx';
+import Home from './pages/Home.tsx';
 import LaptopDetail from './pages/LaptopDetail';
 
 import { ToastContainer } from 'react-toastify';
