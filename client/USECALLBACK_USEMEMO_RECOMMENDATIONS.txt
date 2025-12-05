@@ -1,0 +1,589 @@
+================================================================================
+USECALLBACK AND USEMEMO OPTIMIZATION RECOMMENDATIONS
+================================================================================
+Generated: Code Review Analysis
+Project: Laptomania Frontend
+
+This document identifies where useCallback and useMemo hooks should be implemented
+to optimize React component performance and prevent unnecessary re-renders.
+
+================================================================================
+PRIORITY LEVELS:
+================================================================================
+🔴 HIGH - Significant performance impact, should be implemented
+🟡 MEDIUM - Moderate performance benefit, recommended
+🟢 LOW - Minor optimization, optional
+
+================================================================================
+
+📁 FILE: src/components/UI/Nav.jsx
+================================================================================
+
+🔴 HIGH PRIORITY:
+
+1. Line 13-14: Memoize cart calculations
+   CURRENT:
+   const totalItems = cart.reduce((prev, cur) => prev + cur.quantity, 0);
+   const totalPrice = cart.reduce((prev, cur) => prev + cur.price * cur.quantity, 0);
+
+   RECOMMENDATION:
+   const totalItems = useMemo(() => 
+     cart.reduce((prev, cur) => prev + cur.quantity, 0), 
+     [cart]
+   );
+   const totalPrice = useMemo(() => 
+     cart.reduce((prev, cur) => prev + cur.price * cur.quantity, 0), 
+     [cart]
+   );
+
+   REASON: These calculations run on every render. With useMemo, they only 
+   recalculate when cart changes. Important for performance when cart has 
+   many items.
+
+================================================================================
+
+📁 FILE: src/pages/Catalog.jsx
+================================================================================
+
+🔴 HIGH PRIORITY:
+
+1. Line 21-23: Wrap handleUpdate in useCallback
+   CURRENT:
+   const handleUpdate = async (e) => {
+     e.preventDefault();
+     const formData = new FormData(e.target);
+     await updateLaptop(laptop._id, formData);
+     setEditing(false);
+   };
+
+   RECOMMENDATION:
+   const handleUpdate = useCallback(async (e) => {
+     e.preventDefault();
+     const formData = new FormData(e.target);
+     await updateLaptop(laptop._id, formData);
+     setEditing(false);
+   }, [laptop._id, updateLaptop]);
+
+   REASON: Prevents function recreation on every render, especially important 
+   since this is inside the Laptop component which renders for each laptop item.
+
+🔴 HIGH PRIORITY:
+
+2. Line 145-165: Memoize filteredLaptops
+   CURRENT:
+   const filteredLaptops = laptops
+     ?.filter((laptop) => {
+       const searchLower = searchTerm.toLowerCase();
+       return (
+         laptop.brand?.toLowerCase().includes(searchLower) ||
+         laptop.model?.toLowerCase().includes(searchLower) ||
+         laptop.processor?.toLowerCase().includes(searchLower)
+       );
+     })
+     .sort((a, b) => {
+       switch (sortBy) {
+         case 'price-low':
+           return a.price - b.price;
+         case 'price-high':
+           return b.price - a.price;
+         case 'name':
+           return `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`);
+         default:
+           return 0;
+       }
+     });
+
+   RECOMMENDATION:
+   const filteredLaptops = useMemo(() => {
+     return laptops
+       ?.filter((laptop) => {
+         const searchLower = searchTerm.toLowerCase();
+         return (
+           laptop.brand?.toLowerCase().includes(searchLower) ||
+           laptop.model?.toLowerCase().includes(searchLower) ||
+           laptop.processor?.toLowerCase().includes(searchLower)
+         );
+       })
+       .sort((a, b) => {
+         switch (sortBy) {
+           case 'price-low':
+             return a.price - b.price;
+           case 'price-high':
+             return b.price - a.price;
+           case 'name':
+             return `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`);
+           default:
+             return 0;
+         }
+       });
+   }, [laptops, searchTerm, sortBy]);
+
+   REASON: This is an expensive operation (filtering + sorting) that runs on 
+   every render. With useMemo, it only recalculates when laptops, searchTerm, 
+   or sortBy changes. Critical for performance with large laptop lists.
+
+🟡 MEDIUM PRIORITY:
+
+3. Line 10-12: Memoize editableFields
+   CURRENT:
+   const editableFields = Object.keys(laptop).filter(
+     (key) => !['_id', '__v', 'createdAt', 'updatedAt', 'isAvailable', 'images'].includes(key)
+   );
+
+   RECOMMENDATION:
+   const editableFields = useMemo(() => 
+     Object.keys(laptop).filter(
+       (key) => !['_id', '__v', 'createdAt', 'updatedAt', 'isAvailable', 'images'].includes(key)
+     ), 
+     [laptop]
+   );
+
+   REASON: Prevents recalculation on every render of the Laptop component.
+
+================================================================================
+
+📁 FILE: src/pages/Home.jsx
+================================================================================
+
+🟡 MEDIUM PRIORITY:
+
+1. Line 7: Memoize featuredLaptops
+   CURRENT:
+   const featuredLaptops = laptops?.slice(0, 3) || [];
+
+   RECOMMENDATION:
+   const featuredLaptops = useMemo(() => 
+     laptops?.slice(0, 3) || [], 
+     [laptops]
+   );
+
+   REASON: Prevents creating a new array reference on every render, which 
+   could cause child components to re-render unnecessarily.
+
+================================================================================
+
+📁 FILE: src/pages/LaptopDetail.jsx
+================================================================================
+
+🔴 HIGH PRIORITY:
+
+1. Line 28-32: Wrap handleAddToCart in useCallback
+   CURRENT:
+   const handleAddToCart = () => {
+     for (let i = 0; i < quantity; i++) {
+       addToCart(laptop);
+     }
+   };
+
+   RECOMMENDATION:
+   const handleAddToCart = useCallback(() => {
+     for (let i = 0; i < quantity; i++) {
+       addToCart(laptop);
+     }
+   }, [quantity, laptop, addToCart]);
+
+   REASON: Prevents function recreation on every render, especially important 
+   for event handlers passed to buttons.
+
+🟡 MEDIUM PRIORITY:
+
+2. Line 34-43: Memoize specifications array
+   CURRENT:
+   const specifications = [
+     { label: 'Brand', value: laptop.brand },
+     { label: 'Model', value: laptop.model },
+     { label: 'Processor', value: laptop.processor },
+     { label: 'RAM', value: laptop.ram },
+     { label: 'Storage', value: laptop.storage },
+     { label: 'Graphics', value: laptop.graphics },
+     { label: 'Display', value: laptop.display },
+     { label: 'Operating System', value: laptop.os },
+   ];
+
+   RECOMMENDATION:
+   const specifications = useMemo(() => [
+     { label: 'Brand', value: laptop.brand },
+     { label: 'Model', value: laptop.model },
+     { label: 'Processor', value: laptop.processor },
+     { label: 'RAM', value: laptop.ram },
+     { label: 'Storage', value: laptop.storage },
+     { label: 'Graphics', value: laptop.graphics },
+     { label: 'Display', value: laptop.display },
+     { label: 'Operating System', value: laptop.os },
+   ], [laptop]);
+
+   REASON: Prevents creating a new array on every render, which could cause 
+   the specifications list to re-render unnecessarily.
+
+🟢 LOW PRIORITY:
+
+3. Line 13: Memoize laptop lookup
+   CURRENT:
+   const laptop = laptops?.find((laptop) => laptop._id === id);
+
+   RECOMMENDATION:
+   const laptop = useMemo(() => 
+     laptops?.find((laptop) => laptop._id === id), 
+     [laptops, id]
+   );
+
+   REASON: Minor optimization, but prevents re-running find on every render.
+
+================================================================================
+
+📁 FILE: src/pages/Panel.jsx
+================================================================================
+
+🔴 HIGH PRIORITY:
+
+1. Line 8-16: Wrap handleSubmit in useCallback
+   CURRENT:
+   const handleSubmit = async (e) => {
+     e.preventDefault();
+     setIsSubmitting(true);
+     const formData = new FormData(e.target);
+     await addLaptop(formData);
+     setIsSubmitting(false);
+     e.target.reset();
+   };
+
+   RECOMMENDATION:
+   const handleSubmit = useCallback(async (e) => {
+     e.preventDefault();
+     setIsSubmitting(true);
+     const formData = new FormData(e.target);
+     await addLaptop(formData);
+     setIsSubmitting(false);
+     e.target.reset();
+   }, [addLaptop]);
+
+   REASON: Prevents function recreation on every render. Important for form 
+   submit handlers to maintain referential equality.
+
+================================================================================
+
+📁 FILE: src/pages/Login.jsx
+================================================================================
+
+🟡 MEDIUM PRIORITY:
+
+1. Line 9-12: Wrap handleSubmit in useCallback
+   CURRENT:
+   const handleSubmit = (e) => {
+     e.preventDefault();
+     login(formData);
+   };
+
+   RECOMMENDATION:
+   const handleSubmit = useCallback((e) => {
+     e.preventDefault();
+     login(formData);
+   }, [login, formData]);
+
+   REASON: Prevents function recreation on every render. Good practice for 
+   form handlers.
+
+================================================================================
+
+📁 FILE: src/pages/Signup.jsx
+================================================================================
+
+🟡 MEDIUM PRIORITY:
+
+1. Line 12-15: Wrap handleSubmit in useCallback
+   CURRENT:
+   const handleSubmit = (e) => {
+     e.preventDefault();
+     register(formData);
+   };
+
+   RECOMMENDATION:
+   const handleSubmit = useCallback((e) => {
+     e.preventDefault();
+     register(formData);
+   }, [register, formData]);
+
+   REASON: Prevents function recreation on every render. Good practice for 
+   form handlers.
+
+================================================================================
+
+📁 FILE: src/context/auth.context.jsx
+================================================================================
+
+🔴 HIGH PRIORITY:
+
+1. Lines 28-46: Wrap register function in useCallback
+   CURRENT:
+   const register = async (formData) => { ... };
+
+   RECOMMENDATION:
+   const register = useCallback(async (formData) => {
+     // ... existing code
+   }, [navigate]);
+
+   REASON: This function is passed down through context to multiple components. 
+   Without useCallback, it creates a new reference on every render, causing 
+   all consuming components to re-render.
+
+🔴 HIGH PRIORITY:
+
+2. Lines 48-73: Wrap login function in useCallback
+   CURRENT:
+   const login = async (formData) => { ... };
+
+   RECOMMENDATION:
+   const login = useCallback(async (formData) => {
+     // ... existing code
+   }, [navigate]);
+
+   REASON: Same as register - passed through context, needs stable reference.
+
+🔴 HIGH PRIORITY:
+
+3. Lines 75-97: Wrap logout function in useCallback
+   CURRENT:
+   const logout = async () => { ... };
+
+   RECOMMENDATION:
+   const logout = useCallback(async () => {
+     // ... existing code
+   }, [navigate]);
+
+   REASON: Same as register and login - passed through context.
+
+🟡 MEDIUM PRIORITY:
+
+4. Line 100-102: Memoize context value
+   CURRENT:
+   <authContext.Provider value={{ user, register, login, logout }}>
+
+   RECOMMENDATION:
+   const contextValue = useMemo(() => ({
+     user, 
+     register, 
+     login, 
+     logout
+   }), [user, register, login, logout]);
+
+   <authContext.Provider value={contextValue}>
+
+   REASON: Prevents creating a new object reference on every render, which 
+   would cause all context consumers to re-render.
+
+================================================================================
+
+📁 FILE: src/context/laptops.context.jsx
+================================================================================
+
+🔴 HIGH PRIORITY:
+
+1. Lines 14-28: Wrap getLaptops in useCallback
+   CURRENT:
+   const getLaptops = async () => { ... };
+
+   RECOMMENDATION:
+   const getLaptops = useCallback(async () => {
+     // ... existing code
+   }, []);
+
+   REASON: Used in useEffect and potentially passed to children. Needs stable 
+   reference to prevent infinite loops in useEffect.
+
+🔴 HIGH PRIORITY:
+
+2. Lines 30-56: Wrap deleteLaptop in useCallback
+   CURRENT:
+   const deleteLaptop = async (id) => { ... };
+
+   RECOMMENDATION:
+   const deleteLaptop = useCallback(async (id) => {
+     // ... existing code
+   }, []);
+
+   REASON: Passed through context to multiple components.
+
+🔴 HIGH PRIORITY:
+
+3. Lines 58-88: Wrap updateLaptop in useCallback
+   CURRENT:
+   const updateLaptop = async (id, formData) => { ... };
+
+   RECOMMENDATION:
+   const updateLaptop = useCallback(async (id, formData) => {
+     // ... existing code
+   }, []);
+
+   REASON: Passed through context to multiple components.
+
+🔴 HIGH PRIORITY:
+
+4. Lines 90-116: Wrap addLaptop in useCallback
+   CURRENT:
+   const addLaptop = async (formData) => { ... };
+
+   RECOMMENDATION:
+   const addLaptop = useCallback(async (formData) => {
+     // ... existing code
+   }, [laptops]);
+
+   REASON: Passed through context and uses laptops state.
+
+🔴 HIGH PRIORITY:
+
+5. Lines 118-129: Wrap addToCart in useCallback
+   CURRENT:
+   const addToCart = async (product) => { ... };
+
+   RECOMMENDATION:
+   const addToCart = useCallback(async (product) => {
+     // ... existing code
+   }, [cart]);
+
+   REASON: Frequently called function passed through context, uses cart state.
+
+🔴 HIGH PRIORITY:
+
+6. Lines 131-141: Wrap reduceOne in useCallback
+   CURRENT:
+   const reduceOne = (product) => { ... };
+
+   RECOMMENDATION:
+   const reduceOne = useCallback((product) => {
+     // ... existing code
+   }, []);
+
+   REASON: Passed through context to multiple components.
+
+🔴 HIGH PRIORITY:
+
+7. Lines 143-146: Wrap removeProduct in useCallback
+   CURRENT:
+   const removeProduct = (product) => { ... };
+
+   RECOMMENDATION:
+   const removeProduct = useCallback((product) => {
+     // ... existing code
+   }, []);
+
+   REASON: Passed through context to multiple components.
+
+🔴 HIGH PRIORITY:
+
+8. Lines 148-151: Wrap clearCart in useCallback
+   CURRENT:
+   const clearCart = () => { ... };
+
+   RECOMMENDATION:
+   const clearCart = useCallback(() => {
+     // ... existing code
+   }, []);
+
+   REASON: Passed through context to multiple components.
+
+🔴 HIGH PRIORITY:
+
+9. Lines 157-171: Memoize context value
+   CURRENT:
+   <LaptopContext.Provider value={{ laptops, deleteLaptop, ... }}>
+
+   RECOMMENDATION:
+   const contextValue = useMemo(() => ({
+     laptops,
+     deleteLaptop,
+     updateLaptop,
+     addLaptop,
+     addToCart,
+     cart,
+     reduceOne,
+     removeProduct,
+     clearCart,
+   }), [laptops, deleteLaptop, updateLaptop, addLaptop, addToCart, cart, 
+       reduceOne, removeProduct, clearCart]);
+
+   <LaptopContext.Provider value={contextValue}>
+
+   REASON: Critical! Prevents all context consumers from re-rendering on 
+   every state change in the provider.
+
+================================================================================
+
+📁 FILE: src/hooks/useForm.js
+================================================================================
+
+🟡 MEDIUM PRIORITY:
+
+1. Lines 5-8: Wrap handleChange in useCallback
+   CURRENT:
+   const handleChange = (e) => {
+     const {name , value} = e.target
+     setFormData(prevData => ({...prevData , [name]: value}))
+   }
+
+   RECOMMENDATION:
+   const handleChange = useCallback((e) => {
+     const {name , value} = e.target
+     setFormData(prevData => ({...prevData , [name]: value}))
+   }, []);
+
+   REASON: This function is returned from the hook and used in multiple 
+   components. Stable reference prevents unnecessary re-renders.
+
+================================================================================
+
+SUMMARY OF RECOMMENDATIONS:
+================================================================================
+
+🔴 HIGH PRIORITY (Must implement):
+   - Nav.jsx: 2 useMemo for cart calculations
+   - Catalog.jsx: 1 useCallback + 1 useMemo for filtering/sorting
+   - LaptopDetail.jsx: 1 useCallback for handleAddToCart
+   - Panel.jsx: 1 useCallback for handleSubmit
+   - auth.context.jsx: 3 useCallback + 1 useMemo (context functions + value)
+   - laptops.context.jsx: 8 useCallback + 1 useMemo (all context functions + value)
+
+🟡 MEDIUM PRIORITY (Recommended):
+   - Catalog.jsx: 1 useMemo for editableFields
+   - Home.jsx: 1 useMemo for featuredLaptops
+   - LaptopDetail.jsx: 1 useMemo for specifications
+   - Login.jsx: 1 useCallback for handleSubmit
+   - Signup.jsx: 1 useCallback for handleSubmit
+   - useForm.js: 1 useCallback for handleChange
+
+🟢 LOW PRIORITY (Optional):
+   - LaptopDetail.jsx: 1 useMemo for laptop lookup
+
+TOTAL OPTIMIZATIONS: 24 hooks to add
+   - useCallback: 16
+   - useMemo: 8
+
+================================================================================
+
+IMPLEMENTATION NOTES:
+================================================================================
+
+1. Import statements needed:
+   Add to imports: import { useCallback, useMemo } from 'react';
+
+2. Context providers are CRITICAL:
+   The context providers (auth.context.jsx and laptops.context.jsx) should 
+   be prioritized as they affect ALL consuming components.
+
+3. Testing after implementation:
+   - Verify no infinite loops in useEffect
+   - Check that all functionality still works
+   - Use React DevTools Profiler to measure performance improvements
+
+4. Dependencies arrays:
+   - Be careful with dependency arrays
+   - Include all values used inside the callback/memo
+   - Use ESLint plugin: eslint-plugin-react-hooks for warnings
+
+5. When NOT to use these hooks:
+   - Simple primitive calculations
+   - Functions that are only used once and not passed as props
+   - Components that rarely re-render
+
+================================================================================
+END OF RECOMMENDATIONS
+================================================================================
