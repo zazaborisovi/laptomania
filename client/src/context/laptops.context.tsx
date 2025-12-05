@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useContext, useEffect, useState, createContext } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';

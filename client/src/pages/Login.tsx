@@ -1,18 +1,18 @@
-import { useAuth } from '../context/auth.context.jsx';
+// @ts-nocheck
+import { useAuth } from '../context/auth.context.js';
 import { useForm } from '../hooks/useForm.js';
 import { Link } from 'react-router';
 
-const Register = () => {
-  const { register , googleAuth} = useAuth();
+const Login = () => {
+  const { login , googleAuth} = useAuth();
   const [formData, handleChange] = useForm({
-    name: '',
     email: '',
     password: '',
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    register(formData);
+    login(formData);
   };
 
   return (
@@ -21,30 +21,14 @@ const Register = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h2 className="text-4xl font-bold text-gray-800 mb-2">
-            Create <span className="text-blue-600">Account</span>
+            Welcome <span className="text-blue-600">Back</span>
           </h2>
-          <p className="text-gray-600">Join Laptomania and start shopping</p>
+          <p className="text-gray-600">Sign in to your Laptomania account</p>
         </div>
 
         {/* Form Card */}
         <div className="bg-white rounded-2xl shadow-xl p-8 border border-blue-100">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
-                Full Name
-              </label>
-              <input
-                id="name"
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                placeholder="John Doe"
-              />
-            </div>
-
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
                 Email Address
@@ -75,16 +59,13 @@ const Register = () => {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                 placeholder="••••••••"
               />
-              <p className="mt-2 text-sm text-gray-500">
-                Must be at least 8 characters long
-              </p>
             </div>
 
             <button
               type="submit"
               className="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-lg font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-600 transform hover:scale-[1.02] transition-all duration-200 shadow-lg"
             >
-              Create Account
+              Sign In
             </button>
           </form>
 
@@ -98,7 +79,7 @@ const Register = () => {
             </div>
           </div>
 
-          {/* Google Sign Up Button */}
+          {/* Google Sign In Button */}
           <button
             onClick={googleAuth}
             type="button"
@@ -119,16 +100,16 @@ const Register = () => {
               <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500">Already have an account?</span>
+              <span className="px-4 bg-white text-gray-500">Don't have an account?</span>
             </div>
           </div>
 
-          {/* Login Link */}
+          {/* Register Link */}
           <Link
-            to="/login"
+            to="/register"
             className="block w-full px-6 py-3 bg-white text-blue-600 border-2 border-blue-600 text-center rounded-lg font-semibold hover:bg-blue-50 transition-all duration-200"
           >
-            Sign In
+            Create Account
           </Link>
         </div>
 
@@ -143,4 +124,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default Login;

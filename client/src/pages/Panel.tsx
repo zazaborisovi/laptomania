@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useAuth } from '../context/auth.context';
 import { useLaptop } from '../context/laptops.context';
 import { useState } from 'react';

@@ -2,18 +2,6 @@
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" },
-    {
-      "compilerOptions": {
-        "allowJs": true,       // lets TypeScript compile .js/.jsx
-        "checkJs": false,      // disables type-checking for JS
-        "jsx": "react-jsx",    // needed for React JSX
-        "esModuleInterop": true,
-        "moduleResolution": "node",
-        "target": "ES6",
-        "module": "ESNext"
-      },
-      "include": ["src"]
-    }
+    { "path": "./tsconfig.node.json" }
   ]
 }

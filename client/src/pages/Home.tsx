@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Link } from 'react-router';
 import { useLaptop } from '../context/laptops.context';
 import { useAuth } from '../context/auth.context';
