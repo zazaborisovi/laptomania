@@ -8,7 +8,7 @@ const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
 
 const FACEBOOK_CLIENT_ID = process.env.FACEBOOK_CLIENT_ID;
 const FACEBOOK_CLIENT_SECRET = process.env.FACEBOOK_CLIENT_SECRET;
-const REDIRECT_URI = "http://localhost:3000/api/oauth/facebook/callback";
+const REDIRECT_URI = "https://laptomania-uf65.onrender.com/api/oauth/facebook/callback";
 
 const createSendToken = async (user, res) => {
     // Create JWT token

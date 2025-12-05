@@ -1,5 +1,5 @@
-import { useAuth } from '../context/auth.context.jsx';
-import { useForm } from '../hooks/useForm';
+import { useAuth } from '../context/auth.context.js';
+import { useForm } from '../hooks/useForm.js';
 import { Link } from 'react-router';
 
 const Login = () => {
