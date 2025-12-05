@@ -5,9 +5,15 @@
     { "path": "./tsconfig.node.json" },
     {
       "compilerOptions": {
-        "allowJs": true,
-        "checkJs": false
-      }
+        "allowJs": true,       // lets TypeScript compile .js/.jsx
+        "checkJs": false,      // disables type-checking for JS
+        "jsx": "react-jsx",    // needed for React JSX
+        "esModuleInterop": true,
+        "moduleResolution": "node",
+        "target": "ES6",
+        "module": "ESNext"
+      },
+      "include": ["src"]
     }
   ]
 }
